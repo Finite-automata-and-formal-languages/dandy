@@ -3,6 +3,7 @@ mod binary_op;
 mod enumerate;
 mod equivalence;
 mod test_files;
+mod grammar;
 
 use automata::AutomataType;
 use clap::{Args, Parser, Subcommand, ValueEnum};
@@ -67,6 +68,8 @@ enum Operation {
     EnumerateFile(EnumerateFileArgs),
     #[command(about = "Tests a list of files against an automata or regex")]
     TestFile(TestFileArgs),
+    #[command(about = "Parses a context-free grammar")]
+    ParseGrammar(ParseGrammarArgs),
 }
 
 #[derive(Debug, Args)]
@@ -280,6 +283,12 @@ enum OpType {
     Test,
 }
 
+#[derive(Debug, Args)]
+struct ParseGrammarArgs {
+    #[arg(help = "The file containing the grammar")]
+    grammar: PathBuf,
+}
+
 fn main() {
     let args = DandyArgs::parse();
 
@@ -323,6 +332,9 @@ fn main() {
         Operation::EnumerateFile(file_args) => {
             enumerate::enumerate_file(&args, file_args, &mut sink).map_err(Error::EnumerateFile)
         }
+        Operation::ParseGrammar(grammar_args) => {
+            grammar::parse_grammar(&args, grammar_args, &mut sink).map_err(Error::ParseGrammar)
+        }
     };
 
     if let Err(e) = result {
@@ -342,6 +354,8 @@ enum Error {
     EnumerateRegex(String),
     #[error("Error in enumerating file: {0}")]
     EnumerateFile(String),
+    #[error("Error in parsing grammar: {0}")]
+    ParseGrammar(String),
 }
 
 pub fn last_n_components(path: &Path, n: Option<usize>) -> Option<String> {

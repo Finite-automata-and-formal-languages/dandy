@@ -1,6 +1,6 @@
 //! # Parser for DFAs, NFAs and regular expressions
-//! This module contains parser implementations for DFAs, NFAs (with and without epsilon transitions) and regular
-//! expressions, according to a custom file format.
+//! This module contains parser implementations for DFAs, NFAs (with and without epsilon transitions), regular
+//! expressions and context-free grammars according to a custom file format.
 //!
 //! ## Format for DFAs and NFAs
 //! The file format for DFAs and NFAs are more or less a text representation of the transition table.
@@ -58,6 +58,7 @@
 
 mod fa;
 mod regex;
+mod grammar;
 
 use crate::regex::Regex;
 use nom::{combinator::all_consuming, error::Error, Finish};
@@ -96,6 +97,20 @@ pub struct ParsedDfaState<'a> {
     pub(crate) transitions: Vec<&'a str>,
 }
 
+#[derive(Debug)]
+pub struct ParsedGrammar<'a> {
+    pub(crate) nonterminals: Vec<&'a str>,
+    pub(crate) terminals: Vec<&'a str>,
+    pub(crate) start: &'a str,
+    pub(crate) productions: Vec<ParsedProduction<'a>>,
+}
+
+#[derive(Debug)]
+pub struct ParsedProduction<'a> {
+    pub(crate) name: &'a str,
+    pub(crate) alternatives: Vec<Vec<&'a str>>,
+}
+
 /// Parses a DFA according to the format above. The whole string must be parsable, otherwise this function errors.
 /// Note that the result is a [ParsedDfa], which is not guaranteed to be a valid [crate::dfa::Dfa]. Use
 /// [TryInto::try_into] to convert a [ParsedDfa] to a [crate::dfa::Dfa].
@@ -120,4 +135,10 @@ pub fn regex(input: &str) -> Result<Regex, Error<&str>> {
     all_consuming(regex::full_regex)(input)
         .finish()
         .map(|(_, regex)| regex)
+}
+
+pub fn grammar(input: &str) -> Result<ParsedGrammar, Error<&str>> {
+    all_consuming(grammar::full_grammar)(input)
+        .finish()
+        .map(|(_, grammar)| grammar)
 }
