@@ -57,8 +57,8 @@
 //!
 
 mod fa;
-mod regex;
 mod grammar;
+mod regex;
 
 use crate::regex::Regex;
 use nom::{combinator::all_consuming, error::Error, Finish};
@@ -97,7 +97,7 @@ pub struct ParsedDfaState<'a> {
     pub(crate) transitions: Vec<&'a str>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub struct ParsedGrammar<'a> {
     pub(crate) nonterminals: Vec<&'a str>,
     pub(crate) terminals: Vec<&'a str>,
@@ -105,7 +105,7 @@ pub struct ParsedGrammar<'a> {
     pub(crate) productions: Vec<ParsedProduction<'a>>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub struct ParsedProduction<'a> {
     pub(crate) name: &'a str,
     pub(crate) alternatives: Vec<Vec<&'a str>>,

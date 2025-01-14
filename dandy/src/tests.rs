@@ -524,3 +524,32 @@ fn random_regex(base: &'static str) -> impl Strategy<Value = String> {
         ]
     })
 }
+
+#[test]
+fn test_parse_grammar() {
+    let grammar_source = include_str!("../tests/test_files/grammar1.cfg");
+    let parsed_grammar = parser::grammar(grammar_source).unwrap();
+    let grammar: parser::ParsedGrammar = parsed_grammar.try_into().unwrap();
+
+    let expected_grammar = parser::ParsedGrammar {
+        terminals: vec!["1", "+", "-"],
+        nonterminals: vec!["E", "N", "O"],
+        productions: vec![
+            parser::ParsedProduction {
+                name: "N",
+                alternatives: vec![vec!["1", "N"], vec!["1"]],
+            },
+            parser::ParsedProduction {
+                name: "O",
+                alternatives: vec![vec!["+"], vec![], vec!["-"]],
+            },
+            parser::ParsedProduction {
+                name: "E",
+                alternatives: vec![vec!["N"], vec!["E", "O", "E"]],
+            },
+        ],
+        start: "E",
+    };
+
+    assert!(grammar == expected_grammar);
+}
