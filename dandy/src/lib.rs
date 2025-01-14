@@ -118,6 +118,7 @@ pub mod dfa;
 pub mod nfa;
 pub mod parser;
 pub mod regex;
+pub mod grammar;
 mod table;
 #[cfg(test)]
 mod tests;
