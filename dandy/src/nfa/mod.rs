@@ -1235,40 +1235,11 @@ impl Nfa {
     /// If the automatons have different alphabets they are never equivalent, but the order of the alphabet,
     /// the number of states and the transitions doesn't matter.
     pub fn equivalent_to(&self, other: &Nfa) -> bool {
-        //if the alphabets are different, they aren't equivalent
-        if !alphabet_equal(&self.alphabet, &other.alphabet) {
-            return false;
-        }
+        self.separable_from(other).is_none()
+    }
 
-        // initially, we explore the (pair of) initial states
-        let mut evaluators_to_explore = vec![(self.evaluator(), other.evaluator())];
-        let mut explored_states = HashSet::new();
-        explored_states.insert((
-            Self::set_to_vec(evaluators_to_explore[0].0.current_states_idx()),
-            Self::set_to_vec(evaluators_to_explore[0].1.current_states_idx()),
-        ));
-
-        while let Some((s1, s2)) = evaluators_to_explore.pop() {
-            // we explore states s1 and s2
-            // they must both be accepting or rejecting
-            if s1.is_accepting() != s2.is_accepting() {
-                return false;
-            }
-            // for each char in alphabet, we step the evaluator. If we get new states, explore them!
-            for elem in self.alphabet.iter() {
-                let mut d1 = s1.clone();
-                d1.step(elem);
-                let mut d2 = s2.clone();
-                d2.step(elem);
-                if explored_states.insert((
-                    Self::set_to_vec(d1.current_states_idx()),
-                    Self::set_to_vec(d2.current_states_idx()),
-                )) {
-                    evaluators_to_explore.push((d1, d2));
-                }
-            }
-        }
-        true
+    pub fn separable_from(&self, other: &Nfa) -> Option<Option<String>> {
+        self.to_dfa().separable_from(&other.to_dfa())
     }
 
     /// Converts a HashSet (which is not hashable) to a Vec (which is hashable) in a determenistic way

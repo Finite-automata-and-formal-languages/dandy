@@ -897,24 +897,26 @@ impl Dfa {
     // We could check intersection between one DFA and second DFA complement, and check if it is 0
     // but that would lead to a slowdown of 3964%, so we keep it as is
     pub fn equivalent_to(&self, other: &Dfa) -> bool {
+        self.separable_from(other).is_none()
+    }
+
+    pub fn separable_from(&self, other: &Dfa) -> Option<Option<String>> {
         //if the alphabets are different, they aren't equivalent
         if !alphabet_equal(&self.alphabet, &other.alphabet) {
-            return false;
+            return Some(None);
         }
-
         // initially, we explore the (pair of) initial states
-        let mut evaluators_to_explore = vec![(self.evaluator(), other.evaluator())];
+        let mut evaluators_to_explore = vec![(self.evaluator(), other.evaluator(), String::new())];
         let mut explored_states = HashSet::new();
         explored_states.insert((
             evaluators_to_explore[0].0.current_state_idx(),
             evaluators_to_explore[0].1.current_state_idx(),
         ));
-
-        while let Some((s1, s2)) = evaluators_to_explore.pop() {
+        while let Some((s1, s2, w)) = evaluators_to_explore.pop() {
             // we explore states s1 and s2
             // they must both be accepting or rejecting
             if s1.is_accepting() != s2.is_accepting() {
-                return false;
+                return Some(Some(w));
             }
             // for each char in alphabet, we step the evaluator. If we get new states, explore them!
             for elem in self.alphabet.iter() {
@@ -923,11 +925,13 @@ impl Dfa {
                 let mut d2 = s2.clone();
                 d2.step(elem);
                 if explored_states.insert((d1.current_state_idx(), d2.current_state_idx())) {
-                    evaluators_to_explore.push((d1, d2));
+                    let mut wa = w.clone();
+                    wa.push_str(elem);
+                    evaluators_to_explore.push((d1, d2, wa));
                 }
             }
         }
-        true
+        return None;
     }
 
     /// Gets the alphabet of this DFA

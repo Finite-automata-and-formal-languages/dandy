@@ -228,34 +228,37 @@ impl Automata {
             (T::Dfa, T::Dfa) => {
                 let dfa1 = self.borrow_dfa().unwrap();
                 let dfa2 = other.borrow_dfa().unwrap();
-                if dfa1.equivalent_to(dfa2) {
-                    if minimized && dfa1.states().len() != dfa2.states().len() {
-                        NotMinimized
-                    } else {
-                        Equivalent
-                    }
-                } else {
-                    NotEquivalent
+                match dfa1.separable_from(dfa2) {
+                    None =>
+                        if minimized && dfa1.states().len() != dfa2.states().len() {
+                            NotMinimized
+                        } else {
+                            Equivalent
+                        }
+                    Some(s) => s.map(NotEquivalent).unwrap_or(AlphabetMismatch)
                 }
             }
             (T::Dfa, _) => {
                 warn_minimized!(minimized);
                 let dfa1 = self.borrow_dfa().unwrap();
                 let (dfa2, _) = other.into_dfa();
-                if dfa1.equivalent_to(&dfa2) {
-                    Equivalent
-                } else {
-                    NotEquivalent
+                match dfa1.separable_from(&dfa2) {
+                    None =>
+                        if minimized && dfa1.states().len() != dfa2.states().len() {
+                            NotMinimized
+                        } else {
+                            Equivalent
+                        }
+                    Some(s) => s.map(NotEquivalent).unwrap_or(AlphabetMismatch)
                 }
             }
             (T::Nfa, _) => {
                 warn_minimized_check_type!(minimized, other);
                 let nfa1 = self.borrow_nfa().unwrap();
                 let (nfa2, _) = other.into_nfa();
-                if nfa1.equivalent_to(&nfa2) {
-                    Equivalent
-                } else {
-                    NotEquivalent
+                match nfa1.separable_from(&nfa2) {
+                    None => Equivalent,
+                    Some(s) => s.map(NotEquivalent).unwrap_or(AlphabetMismatch)
                 }
             }
             (T::Regex, _) => {
@@ -264,10 +267,9 @@ impl Automata {
                 warn_minimized!(minimized);
                 let (dfa1, _) = self.clone().into_dfa();
                 let (dfa2, _) = other.into_dfa();
-                if dfa1.equivalent_to(&dfa2) {
-                    Equivalent
-                } else {
-                    NotEquivalent
+                match dfa1.separable_from(&dfa2) {
+                    None => Equivalent,
+                    Some(s) => s.map(NotEquivalent).unwrap_or(AlphabetMismatch)
                 }
             }
         }

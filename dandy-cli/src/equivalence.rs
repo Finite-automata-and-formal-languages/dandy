@@ -14,7 +14,8 @@ pub enum EquivalenceResult {
     FailedToRead(String),
     FailedToParse(String),
     FailedToValidate(String),
-    NotEquivalent,
+    AlphabetMismatch,
+    NotEquivalent(String),
     NotMinimized,
     Equivalent,
 }
@@ -26,7 +27,8 @@ impl Display for EquivalenceResult {
             FailedToRead(s) => write!(f, "Failed to read ({s})"),
             FailedToParse(s) => write!(f, "Failed to parse ({s})"),
             FailedToValidate(s) => write!(f, "Failed to validate ({s})"),
-            NotEquivalent => write!(f, "Not Equivalent"),
+            AlphabetMismatch => write!(f, "Not Equivalent (different alphabets)"),
+            NotEquivalent(s) => write!(f, "Not Equivalent (separated by {})", if s.is_empty() { "ε" } else { s }),
             NotMinimized => write!(f, "Equivalent but not minimized"),
             Equivalent => write!(f, "Equivalent"),
         }
